@@ -1,7 +1,8 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import env from "dotenv";
-import authRouter from "./auth-router";
+import authRouter from "./routers/auth/auth-router";
+import noteRouter from "./routers/note/note-router";
 
 env.config();
 const PORT = process.env.PORT || 8081;
@@ -17,6 +18,7 @@ app.use(cors({
 }));
 
 app.use(authRouter);
+app.use(noteRouter);
 
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);

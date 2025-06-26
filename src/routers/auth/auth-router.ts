@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { createClient } from "@supabase/supabase-js";
 import env from "dotenv";
-import { DatabaseUser, User } from "./types";
+import { CustomJwtPayload } from "../../types";
+import { AuthBody, DatabaseUser, User } from "./types";
 
 const router = require("express").Router();
 
@@ -17,8 +18,8 @@ if (!SUPABASE_URL || !SUPABASE_KEY)
     throw new Error("Supabase connection is not defined in environment variables");
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-router.post("/api/auth/sign-up", async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+router.post("/auth/sign-up", async (req: Request, res: Response) => {
+    const { email, password } = req.body as AuthBody;
 
     const { data } = await supabase
         .from("user")
@@ -40,8 +41,8 @@ router.post("/api/auth/sign-up", async (req: Request, res: Response) => {
         res.status(400).json({ message: "User with this email already exists" });
 });
 
-router.post("/api/auth/sign-in", async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+router.post("/auth/sign-in", async (req: Request, res: Response) => {
+    const { email, password } = req.body as AuthBody;
   
     const { data } = await supabase
         .from("user")
@@ -72,7 +73,7 @@ router.post("/api/auth/sign-in", async (req: Request, res: Response) => {
             httpOnly: true,
             secure: false,
             sameSite: "strict",
-            path: "/api/auth/refresh",
+            path: "/auth/refresh",
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
@@ -82,22 +83,22 @@ router.post("/api/auth/sign-in", async (req: Request, res: Response) => {
         res.status(401).json({ message: "Invalid credentials" });
 });
 
-router.post("/api/auth/sign-out", (req: Request, res: Response) => {
+router.post("/auth/sign-out", (req: Request, res: Response) => {
     res.clearCookie("accessToken");
-    res.clearCookie("refreshToken", { path: "/api/auth/refresh" });
+    res.clearCookie("refreshToken", { path: "/auth/refresh" });
   
     res.status(200).json({ message: "Logged out successfully" });
 });
 
-router.post("/api/auth/refresh", (req: Request, res: Response) => {
+router.post("/auth/refresh", (req: Request, res: Response) => {
     const refreshToken = req.cookies?.refreshToken;
-  
+
     if (refreshToken) {
         try {
-            const decoded: any = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
+            const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as CustomJwtPayload;
             
             const accessToken = jwt.sign(
-                { userId: decoded?.userId },
+                { userId: decoded.userId },
                 ACCESS_TOKEN_SECRET,
                 { expiresIn: "15m" }
             );
@@ -110,6 +111,7 @@ router.post("/api/auth/refresh", (req: Request, res: Response) => {
 
             res.status(200).json({ message: "Token refreshed successfully" });
         } catch (e) {
+            res.clearCookie("refreshToken", { path: "/auth/refresh" });
             res.status(401).json({ message: "Invalid refresh token" })
         }
     }

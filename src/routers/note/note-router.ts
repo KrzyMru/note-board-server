@@ -1,0 +1,108 @@
+import { Request, Response } from "express";
+import { createClient } from "@supabase/supabase-js";
+import env from "dotenv";
+import { AuthenticatedRequest } from "../../types";
+import { AuthenticateUser } from "../../utils";
+import { CreateNoteBody, DatabaseNote, Note, NoteSnippet, UpdateNoteBody } from "./types";
+
+const router = require("express").Router();
+
+env.config();
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+if (!ACCESS_TOKEN_SECRET || !REFRESH_TOKEN_SECRET)
+    throw new Error("Token secret is not defined in environment variables");
+if (!SUPABASE_URL || !SUPABASE_KEY)
+    throw new Error("Supabase connection is not defined in environment variables");
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+router.get("/note/snippets", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
+    const { data, error } = await supabase
+        .from("note")
+        .select("id, title, text")
+        .eq("userId", req.userId);
+
+    if(error)
+        res.status(500).json({ message: "Server couldn't retrieve the requested data" });
+    else {
+        const noteSnippets: NoteSnippet[] = data;
+        res.status(200).json(noteSnippets);
+    }
+});
+
+router.get("/note/:noteId", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
+    const { noteId } = req.params;
+
+    const { data, error } = await supabase
+        .from("note")
+        .select("*")
+        .eq("id", noteId)
+        .eq("userId", req.userId)
+        .single();
+
+    if(error)
+        res.status(500).json({ message: "Server couldn't retrieve the requested data" });
+    else {
+        const note: DatabaseNote = data;
+        res.status(200).json(note);
+    }
+});
+
+router.post("/note/create", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
+    const { title, text } = req.body as CreateNoteBody;
+
+    const newNote: Note = { 
+        title, 
+        text, 
+        userId: req.userId, 
+        categoryId: null 
+    };
+
+    const { data, error } = await supabase
+        .from("note")
+        .insert(newNote)
+        .select()
+        .single();
+
+    if (error)
+        res.status(500).json({ message: "Server couldn't save the new note"});
+    else 
+        res.status(200).json(data);
+});
+
+router.put("/note/update", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
+    const note = req.body as UpdateNoteBody;
+
+    const { data, error } = await supabase
+        .from("note")
+        .update(note)
+        .eq("id", note.id)
+        .eq("userId", req.userId)
+        .select()
+        .single();
+
+    if (error)
+        res.status(500).json({ message: "Server couldn't update the specified note"});
+    else {
+        res.status(200).json(data);
+    }
+});
+
+router.delete("/note/:noteId", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
+    const { noteId } = req.params;
+
+    const { error } = await supabase
+        .from("note")
+        .delete()
+        .eq("id", noteId)
+        .eq("userId", req.userId);
+
+    if (error)
+        res.status(500).json({ message: "Server couldn't delete the specified note"});
+    else 
+        res.status(200).json({ message: "Note deleted successfully" });
+});
+
+export default router;

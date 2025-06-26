@@ -1,13 +1,12 @@
-interface User {
-    email: string,
-    password: string,
+import { Request } from "express";
+import { JwtPayload } from "jsonwebtoken";
+
+interface AuthenticatedRequest extends Request {
+    userId: number,
 }
 
-interface DatabaseUser extends User {
-    id: number,
+interface CustomJwtPayload extends JwtPayload {
+    userId: number,
 }
 
-export type { 
-    User,
-    DatabaseUser,
- }
+export type { AuthenticatedRequest, CustomJwtPayload, }
