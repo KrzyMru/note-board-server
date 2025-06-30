@@ -51,13 +51,13 @@ router.get("/note/:noteId", AuthenticateUser, async (req: AuthenticatedRequest, 
 });
 
 router.post("/note/create", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
-    const { title, text } = req.body as CreateNoteBody;
+    const { title, text, categoryId } = req.body as CreateNoteBody;
 
     const newNote: Note = { 
         title, 
         text, 
         userId: req.userId, 
-        categoryId: null 
+        categoryId: categoryId, 
     };
 
     const { data, error } = await supabase

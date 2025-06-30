@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 import env from "dotenv";
 import authRouter from "./routers/auth/auth-router";
 import noteRouter from "./routers/note/note-router";
+import categoryRouter from "./routers/category/category-router";
 
 env.config();
 const PORT = process.env.PORT || 8081;
@@ -19,6 +20,7 @@ app.use(cors({
 
 app.use(authRouter);
 app.use(noteRouter);
+app.use(categoryRouter);
 
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);

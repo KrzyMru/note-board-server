@@ -18,6 +18,7 @@ interface DatabaseNote extends Note {
 interface CreateNoteBody {
     title: string,
     text: string,
+    categoryId: number|null,
 }
 
 interface UpdateNoteBody extends DatabaseNote {
