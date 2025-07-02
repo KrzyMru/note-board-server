@@ -53,41 +53,48 @@ router.get("/note/:noteId", AuthenticateUser, async (req: AuthenticatedRequest, 
 router.post("/note/create", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
     const { title, text, categoryId } = req.body as CreateNoteBody;
 
-    const newNote: Note = { 
-        title, 
-        text, 
-        userId: req.userId, 
-        categoryId: categoryId, 
-    };
+    if(ValidateFields(title)) {
+        const newNote: Note = { 
+            title, 
+            text, 
+            userId: req.userId, 
+            categoryId: categoryId, 
+        };
 
-    const { data, error } = await supabase
-        .from("note")
-        .insert(newNote)
-        .select()
-        .single();
+        const { data, error } = await supabase
+            .from("note")
+            .insert(newNote)
+            .select()
+            .single();
 
-    if (error)
-        res.status(500).json({ message: "Server couldn't save the new note"});
-    else 
-        res.status(200).json(data);
+        if (error)
+            res.status(500).json({ message: "Server couldn't save the new note"});
+        else 
+            res.status(200).json(data);
+    }
+    else
+        res.status(400).json({ message: "At least one field has invalid format"});
 });
 
 router.put("/note/update", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
     const note = req.body as UpdateNoteBody;
 
-    const { data, error } = await supabase
-        .from("note")
-        .update(note)
-        .eq("id", note.id)
-        .eq("userId", req.userId)
-        .select()
-        .single();
+    if(ValidateFields(note.title)) {
+        const { data, error } = await supabase
+            .from("note")
+            .update(note)
+            .eq("id", note.id)
+            .eq("userId", req.userId)
+            .select()
+            .single();
 
-    if (error)
-        res.status(500).json({ message: "Server couldn't update the specified note"});
-    else {
-        res.status(200).json(data);
+        if (error)
+            res.status(500).json({ message: "Server couldn't update the specified note"});
+        else
+            res.status(200).json(data);
     }
+    else
+        res.status(400).json({ message: "At least one field has invalid format"});
 });
 
 router.delete("/note/:noteId", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
@@ -104,5 +111,12 @@ router.delete("/note/:noteId", AuthenticateUser, async (req: AuthenticatedReques
     else 
         res.status(200).json({ message: "Note deleted successfully" });
 });
+
+const ValidateFields = (title: string) => {
+    if(title.length === 0)
+        return false;
+
+    return true;
+}
 
 export default router;

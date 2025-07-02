@@ -89,41 +89,49 @@ router.get("/category/notes/:categoryId", AuthenticateUser, async (req: Authenti
 router.post("/category/create", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
     const { name, backgroundColor, nameColor } = req.body as CreateCategoryBody;
 
-    const newCategory: Category = { 
-        name, 
-        backgroundColor,
-        nameColor,
-        userId: req.userId,
-    };
+    if(ValidateFields(name)) {
+        const newCategory: Category = { 
+            name, 
+            backgroundColor,
+            nameColor,
+            userId: req.userId,
+        };
 
-    const { data, error } = await supabase
-        .from("category")
-        .insert(newCategory)
-        .select()
-        .single();
+        const { data, error } = await supabase
+            .from("category")
+            .insert(newCategory)
+            .select()
+            .single();
 
-    if (error)
-        res.status(500).json({ message: "Server couldn't save the new category"});
-    else 
-        res.status(200).json(data);
+        if (error)
+            res.status(500).json({ message: "Server couldn't save the new category"});
+        else 
+            res.status(200).json(data);
+    }
+    else
+        res.status(400).json({ message: "At least one field has invalid format"});
 });
 
 router.put("/category/update", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
     const category = req.body as UpdateCategoryBody;
 
-    const { data, error } = await supabase
-        .from("category")
-        .update(category)
-        .eq("id", category.id)
-        .eq("userId", req.userId)
-        .select()
-        .single();
+    if(ValidateFields(category.name)) {
+        const { data, error } = await supabase
+            .from("category")
+            .update(category)
+            .eq("id", category.id)
+            .eq("userId", req.userId)
+            .select()
+            .single();
 
-    if (error)
-        res.status(500).json({ message: "Server couldn't update the specified category"});
-    else {
-        res.status(200).json(data);
+        if (error)
+            res.status(500).json({ message: "Server couldn't update the specified category"});
+        else {
+            res.status(200).json(data);
+        }
     }
+    else
+        res.status(400).json({ message: "At least one field has invalid format"});
 });
 
 router.delete("/category/:categoryId", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
@@ -140,5 +148,12 @@ router.delete("/category/:categoryId", AuthenticateUser, async (req: Authenticat
     else 
         res.status(200).json({ message: "Category deleted successfully" });
 });
+
+const ValidateFields = (name: string) => {
+    if(name.length === 0)
+        return false;
+
+    return true;
+}
 
 export default router;
