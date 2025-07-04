@@ -104,12 +104,12 @@ router.post("/category/create", AuthenticateUser, async (req: AuthenticatedReque
             .single();
 
         if (error)
-            res.status(500).json({ message: "Server couldn't save the new category"});
+            res.status(500).json({ message: "Server couldn't save the new category" });
         else 
-            res.status(200).json(data);
+            res.status(200).json({ category: data, message: "Category created successfully" });
     }
     else
-        res.status(400).json({ message: "At least one field has invalid format"});
+        res.status(400).json({ message: "At least one field has invalid format" });
 });
 
 router.put("/category/update", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
@@ -125,13 +125,13 @@ router.put("/category/update", AuthenticateUser, async (req: AuthenticatedReques
             .single();
 
         if (error)
-            res.status(500).json({ message: "Server couldn't update the specified category"});
+            res.status(500).json({ message: "Server couldn't update the specified category" });
         else {
-            res.status(200).json(data);
+            res.status(200).json({ category: data, message: "Category updated successfully" });
         }
     }
     else
-        res.status(400).json({ message: "At least one field has invalid format"});
+        res.status(400).json({ message: "At least one field has invalid format" });
 });
 
 router.delete("/category/:categoryId", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
@@ -144,7 +144,7 @@ router.delete("/category/:categoryId", AuthenticateUser, async (req: Authenticat
         .eq("userId", req.userId);
 
     if (error)
-        res.status(500).json({ message: "Server couldn't delete the specified category"});
+        res.status(500).json({ message: "Server couldn't delete the specified category" });
     else 
         res.status(200).json({ message: "Category deleted successfully" });
 });

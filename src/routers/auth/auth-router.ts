@@ -36,7 +36,7 @@ router.post("/auth/sign-up", async (req: Request, res: Response) => {
                 .from("user")
                 .insert(newUser);
             
-            res.status(200).json({ message: "User created successfully" });
+            res.status(200).json({ message: "Account registered successfully" });
         } 
         else
             res.status(400).json({ message: "User with this email already exists" });

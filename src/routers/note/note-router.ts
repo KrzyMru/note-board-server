@@ -68,12 +68,12 @@ router.post("/note/create", AuthenticateUser, async (req: AuthenticatedRequest, 
             .single();
 
         if (error)
-            res.status(500).json({ message: "Server couldn't save the new note"});
+            res.status(500).json({ message: "Server couldn't save the new note" });
         else 
-            res.status(200).json(data);
+            res.status(200).json({ note: data, message: "Note created successfully" });
     }
     else
-        res.status(400).json({ message: "At least one field has invalid format"});
+        res.status(400).json({ message: "At least one field has invalid format" });
 });
 
 router.put("/note/update", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
@@ -89,12 +89,12 @@ router.put("/note/update", AuthenticateUser, async (req: AuthenticatedRequest, r
             .single();
 
         if (error)
-            res.status(500).json({ message: "Server couldn't update the specified note"});
+            res.status(500).json({ message: "Server couldn't update the specified note" });
         else
-            res.status(200).json(data);
+            res.status(200).json({ note: data, message: "Note updated successfully" });
     }
     else
-        res.status(400).json({ message: "At least one field has invalid format"});
+        res.status(400).json({ message: "At least one field has invalid format" });
 });
 
 router.delete("/note/:noteId", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
@@ -107,7 +107,7 @@ router.delete("/note/:noteId", AuthenticateUser, async (req: AuthenticatedReques
         .eq("userId", req.userId);
 
     if (error)
-        res.status(500).json({ message: "Server couldn't delete the specified note"});
+        res.status(500).json({ message: "Server couldn't delete the specified note" });
     else 
         res.status(200).json({ message: "Note deleted successfully" });
 });
