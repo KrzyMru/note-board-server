@@ -6,6 +6,9 @@ import noteRouter from "./routers/note/note-router";
 import categoryRouter from "./routers/category/category-router";
 
 env.config();
+const ACCEPTED_ORIGIN = process.env.ACCEPTED_ORIGIN;
+if (!ACCEPTED_ORIGIN)
+    throw new Error("Accepted origin is not defined in environment variables");
 const PORT = process.env.PORT || 8081;
 
 const app = express();
@@ -14,7 +17,7 @@ app.use(express.json());
 
 var cors = require('cors');
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: ACCEPTED_ORIGIN,
     credentials: true
 }));
 

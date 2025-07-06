@@ -70,14 +70,16 @@ router.post("/auth/sign-in", async (req: Request, res: Response) => {
 
             res.cookie("accessToken", accessToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production' ? true : false,
+                secure: process.env.NODE_ENV === 'production',
                 sameSite: process.env.NODE_ENV === 'production' ? "none" : "strict",
+                partitioned: process.env.NODE_ENV === 'production',
                 maxAge: 15 * 60 * 1000 // 15 minutes
             });
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production' ? true : false,
+                secure: process.env.NODE_ENV === 'production',
                 sameSite: process.env.NODE_ENV === 'production' ? "none" : "strict",
+                partitioned: process.env.NODE_ENV === 'production',
                 path: "/auth/refresh",
                 maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
             });
@@ -92,8 +94,19 @@ router.post("/auth/sign-in", async (req: Request, res: Response) => {
 });
 
 router.post("/auth/sign-out", (req: Request, res: Response) => {
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken", { path: "/auth/refresh" });
+    res.clearCookie("accessToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? "none" : "strict",
+        partitioned: process.env.NODE_ENV === 'production',
+    });
+    res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? "none" : "strict",
+        partitioned: process.env.NODE_ENV === 'production',
+        path: "/auth/refresh",
+    });
   
     res.status(200).json({ message: "Logged out successfully" });
 });
@@ -112,14 +125,21 @@ router.post("/auth/refresh", (req: Request, res: Response) => {
             );
             res.cookie("accessToken", accessToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production' ? true : false,
+                secure: process.env.NODE_ENV === 'production',
                 sameSite: process.env.NODE_ENV === 'production' ? "none" : "strict",
+                partitioned: process.env.NODE_ENV === 'production',
                 maxAge: 15 * 60 * 1000 // 15 minutes
             });
 
             res.status(200).json({ message: "Token refreshed successfully" });
         } catch (e) {
-            res.clearCookie("refreshToken", { path: "/auth/refresh" });
+            res.clearCookie("refreshToken", {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: process.env.NODE_ENV === 'production' ? "none" : "strict",
+                partitioned: process.env.NODE_ENV === 'production',
+                path: "/auth/refresh",
+            });
             res.status(401).json({ message: "Invalid refresh token" })
         }
     }
