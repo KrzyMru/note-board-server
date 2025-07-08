@@ -3,12 +3,16 @@ interface Note {
     text: string,
     userId: number,
     categoryId: number|null,
+    pinned: boolean,
+    creationDate: string,
 }
 
 interface NoteSnippet {
     id: number,
     title: string,
     text: string,
+    pinned: boolean,
+    creationDate: string,
 }
 
 interface DatabaseNote extends Note {

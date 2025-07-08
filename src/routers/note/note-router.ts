@@ -21,7 +21,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 router.get("/note/snippets", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
     const { data, error } = await supabase
         .from("note")
-        .select("id, title, text")
+        .select("id, title, text, pinned, creationDate")
         .eq("userId", req.userId);
 
     if(error)
@@ -59,6 +59,8 @@ router.post("/note/create", AuthenticateUser, async (req: AuthenticatedRequest, 
             text, 
             userId: req.userId, 
             categoryId: categoryId, 
+            pinned: false,
+            creationDate: (new Date()).toISOString(),
         };
 
         const { data, error } = await supabase
@@ -69,8 +71,10 @@ router.post("/note/create", AuthenticateUser, async (req: AuthenticatedRequest, 
 
         if (error)
             res.status(500).json({ message: "Server couldn't save the new note" });
-        else 
-            res.status(200).json({ note: data, message: "Note created successfully" });
+        else {
+            const note: DatabaseNote = data;
+            res.status(200).json({ note: note, message: "Note created successfully" });
+        }
     }
     else
         res.status(400).json({ message: "At least one field has invalid format" });
@@ -90,12 +94,46 @@ router.put("/note/update", AuthenticateUser, async (req: AuthenticatedRequest, r
 
         if (error)
             res.status(500).json({ message: "Server couldn't update the specified note" });
-        else
-            res.status(200).json({ note: data, message: "Note updated successfully" });
+        else {
+            const note: DatabaseNote = data;
+            res.status(200).json({ note: note, message: "Note updated successfully" });
+        }
     }
     else
         res.status(400).json({ message: "At least one field has invalid format" });
 });
+
+router.put("/note/:noteId/toggle-pin", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
+    const { noteId } = req.params;
+
+    const { data: dataSelect, error } = await supabase
+        .from("note")
+        .select("*")
+        .eq("id", noteId)
+        .eq("userId", req.userId)
+        .single();
+
+    if (error)
+        res.status(500).json({ message: "Server couldn't find the specified note" });
+    else {
+        const note: DatabaseNote = dataSelect;
+        const { data: dataUpdate, error } = await supabase
+            .from("note")
+            .update({ pinned: !note.pinned })
+            .eq("id", noteId)
+            .eq("userId", req.userId)
+            .select()
+            .single();
+
+        if(error)
+            res.status(500).json({ message: "Server couldn't update the specified note" });
+        else {
+            const note: DatabaseNote = dataUpdate;
+            res.status(200).json({ note: note, message: "Note updated successfully" });
+        } 
+    }
+});
+
 
 router.delete("/note/:noteId", AuthenticateUser, async (req: AuthenticatedRequest, res: Response) => {
     const { noteId } = req.params;
